@@ -1,0 +1,14 @@
+{
+  "name": "finca-regaleira-pagina",
+  "version": "1.0.0",
+  "description": "Registro de viajeros para estancia en Finca Regaleira",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "compartir": "node compartir.js",
+    "publico": "node compartir.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

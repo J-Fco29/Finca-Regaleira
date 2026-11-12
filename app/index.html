@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Viajeros — Finca Regaleira</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="bg-glow"></div>
+
+<header class="header">
+    <span class="badge">🏰 Finca Regaleira</span>
+    <h1>Registro de Viajeros</h1>
+    <p>Completa tus datos para organizar las habitaciones y dietas del viaje a Sintra.</p>
+</header>
+
+<main class="container">
+    <form id="registroForm" class="card" novalidate>
+
+        <!-- 1. Foto Personal y Datos Básicos -->
+        <section class="section">
+            <div class="section-header">
+                <span class="step-num">01</span>
+                <div>
+                    <h2>Foto y Datos Personales</h2>
+                    <p class="section-desc">Identificación para la acreditación en la finca.</p>
+                </div>
+            </div>
+
+            <!-- Foto personal -->
+            <div class="form-group">
+                <label for="foto">Foto personal <span class="req">*</span></label>
+                <div class="foto-upload-box">
+                    <input type="file" id="foto" name="foto" accept="image/*" capture="user">
+                    <div id="previewContainer" class="preview-box hidden">
+                        <img id="previewImg" src="" alt="Previsualización de foto personal">
+                        <button type="button" id="btnQuitarFoto" class="btn-remove-photo" title="Quitar foto">&times;</button>
+                    </div>
+                </div>
+                <small id="feedback-foto" class="field-feedback">Sube o hazte una foto reciente (cámara del móvil o galería).</small>
+            </div>
+
+            <div class="form-group">
+                <label for="nombre">Nombre y apellidos <span class="req">*</span></label>
+                <input type="text" id="nombre" name="nombre" required placeholder="Ej. Juan Pérez García">
+                <span id="feedback-nombre" class="field-feedback"></span>
+            </div>
+
+            <div class="grid-2">
+                <div class="form-group">
+                    <label for="dni">DNI / NIE <span class="req">*</span></label>
+                    <input type="text" id="dni" name="dni" maxlength="9" required placeholder="12345678A">
+                    <span id="feedback-dni" class="field-feedback"></span>
+                </div>
+                <div class="form-group">
+                    <label for="telefono">Teléfono <span class="req">*</span></label>
+                    <input type="tel" id="telefono" name="telefono" maxlength="9" required placeholder="612345678">
+                    <span id="feedback-telefono" class="field-feedback"></span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. Salud y Accesibilidad -->
+        <section class="section">
+            <div class="section-header">
+                <span class="step-num">02</span>
+                <div>
+                    <h2>Salud y Accesibilidad</h2>
+                    <p class="section-desc">Información médica para coordinar menús y accesos adaptados.</p>
+                </div>
+            </div>
+
+            <!-- Alergias -->
+            <div class="form-group">
+                <label>¿Tienes alguna alergia o intolerancia? <span class="req">*</span></label>
+                <div class="radio-group">
+                    <label class="radio-pill">
+                        <input type="radio" name="alergias_radio" value="no" checked>
+                        <span>No</span>
+                    </label>
+                    <label class="radio-pill">
+                        <input type="radio" name="alergias_radio" value="si">
+                        <span>Sí</span>
+                    </label>
+                </div>
+            </div>
+
+            <div id="campoAlergias" class="form-group hidden">
+                <label for="alergias_detalle">Especifica tus alergias o intolerancias <span class="req">*</span></label>
+                <textarea id="alergias_detalle" name="alergias_detalle" rows="2" placeholder="Ej. Frutos secos, gluten, lactosa, penicilina..."></textarea>
+                <span id="feedback-alergias" class="field-feedback"></span>
+            </div>
+
+            <!-- Lesiones -->
+            <div class="form-group">
+                <label>¿Tienes alguna lesión física actual? <span class="req">*</span></label>
+                <div class="radio-group">
+                    <label class="radio-pill">
+                        <input type="radio" name="lesiones_radio" value="no" checked>
+                        <span>No</span>
+                    </label>
+                    <label class="radio-pill">
+                        <input type="radio" name="lesiones_radio" value="si">
+                        <span>Sí</span>
+                    </label>
+                </div>
+            </div>
+
+            <div id="campoLesiones" class="form-group hidden">
+                <label for="lesiones_detalle">Especifica tu lesión o limitación física <span class="req">*</span></label>
+                <textarea id="lesiones_detalle" name="lesiones_detalle" rows="2" placeholder="Ej. Esguince de tobillo, molestia lumbar al subir escaleras..."></textarea>
+                <span id="feedback-lesiones" class="field-feedback"></span>
+            </div>
+
+            <!-- Discapacidad -->
+            <div class="form-group">
+                <label for="discapacidad">Grado de discapacidad reconocida</label>
+                <select id="discapacidad" name="discapacidad">
+                    <option value="ninguno">Ninguno / No aplica</option>
+                    <option value="menor_33">Menor al 33%</option>
+                    <option value="33_a_64">Entre 33% y 64%</option>
+                    <option value="65_o_mas">65% o superior</option>
+                </select>
+            </div>
+        </section>
+
+        <!-- 3. Alojamiento y Galería -->
+        <section class="section section-last">
+            <div class="section-header">
+                <span class="step-num">03</span>
+                <div>
+                    <h2>Habitación e Instalaciones</h2>
+                    <p class="section-desc">Organización de las habitaciones y distribución de plazas.</p>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="companeros">Preferencia de compañeros de habitación <span class="opt">(Opcional)</span></label>
+                <textarea id="companeros" name="companeros" rows="2" placeholder="Indica con qué personas te gustaría compartir habitación..."></textarea>
+            </div>
+
+            <!-- Galería de fotos del recinto -->
+            <div class="gallery-wrapper">
+                <div class="gallery-heading">
+                    <div>
+                        <h3>📸 Instalaciones de Finca Regaleira</h3>
+                        <p class="subtitle">Habitaciones, comedor y zonas comunes (haz clic para ampliar)</p>
+                    </div>
+                </div>
+
+                <div class="gallery-grid">
+                    <div class="gallery-card" data-full="imagenes/img.png">
+                        <div class="gallery-img-wrap">
+                            <img src="imagenes/img.png" alt="Comedor y salón de banquetes" loading="lazy" onerror="if(!this.dataset.retry){this.dataset.retry=1;this.src='../imagenes/img.png';}">
+                        </div>
+                        <div class="gallery-card-body">
+                            <span class="tag">Zona común</span>
+                            <strong>Comedor y banquetes</strong>
+                        </div>
+                    </div>
+                    <div class="gallery-card" data-full="imagenes/img_1.png">
+                        <div class="gallery-img-wrap">
+                            <img src="imagenes/img_1.png" alt="Salón de la Gran Chimenea" loading="lazy" onerror="if(!this.dataset.retry){this.dataset.retry=1;this.src='../imagenes/img_1.png';}">
+                        </div>
+                        <div class="gallery-card-body">
+                            <span class="tag">Salón noble</span>
+                            <strong>Salón de la Chimenea</strong>
+                        </div>
+                    </div>
+                    <div class="gallery-card" data-full="imagenes/img_2.png">
+                        <div class="gallery-img-wrap">
+                            <img src="imagenes/img_2.png" alt="Habitación y estancia señorial" loading="lazy" onerror="if(!this.dataset.retry){this.dataset.retry=1;this.src='../imagenes/img_2.png';}">
+                        </div>
+                        <div class="gallery-card-body">
+                            <span class="tag">Alojamiento</span>
+                            <strong>Habitación y estancia</strong>
+                        </div>
+                    </div>
+                    <div class="gallery-card" data-full="imagenes/img_3.png">
+                        <div class="gallery-img-wrap">
+                            <img src="imagenes/img_3.png" alt="Gran salón señorial" loading="lazy" onerror="if(!this.dataset.retry){this.dataset.retry=1;this.src='../imagenes/img_3.png';}">
+                        </div>
+                        <div class="gallery-card-body">
+                            <span class="tag">Reuniones</span>
+                            <strong>Gran salón señorial</strong>
+                        </div>
+                    </div>
+                    <div class="gallery-card" data-full="imagenes/img_4.png">
+                        <div class="gallery-img-wrap">
+                            <img src="imagenes/img_4.png" alt="Aposentos y artesonados" loading="lazy" onerror="if(!this.dataset.retry){this.dataset.retry=1;this.src='../imagenes/img_4.png';}">
+                        </div>
+                        <div class="gallery-card-body">
+                            <span class="tag">Aposentos</span>
+                            <strong>Techo renacentista</strong>
+                        </div>
+                    </div>
+                    <div class="gallery-card" data-full="imagenes/img_5.png">
+                        <div class="gallery-img-wrap">
+                            <img src="imagenes/img_5.png" alt="Capilla de la Finca" loading="lazy" onerror="if(!this.dataset.retry){this.dataset.retry=1;this.src='../imagenes/img_5.png';}">
+                        </div>
+                        <div class="gallery-card-body">
+                            <span class="tag">Monumento</span>
+                            <strong>Capilla de la Finca</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <button type="submit" id="btnSubmit" class="btn-submit">Confirmar y registrar viajero</button>
+    </form>
+
+    <!-- Mensaje de confirmación privado -->
+    <div id="mensajeExito" class="card alert-success hidden">
+        <div class="success-icon">✓</div>
+        <h3>¡Registro completado con éxito!</h3>
+        <p id="datosGuardados" class="success-subtitle">Tu ficha de viajero se ha registrado correctamente para el viaje.</p>
+
+        <div class="actions-group">
+            <button id="btnDescargarTxt" type="button" class="btn-secondary btn-sm-inline">📥 Descargar registros.txt</button>
+            <button id="btnNuevoRegistro" type="button" class="btn-submit btn-sm-inline">Registrar otro viajero</button>
+        </div>
+    </div>
+</main>
+
+<!-- Modal visor de fotos de las instalaciones a tamaño completo -->
+<div id="imageModal" class="image-modal hidden" role="dialog" aria-modal="true" aria-label="Visor de fotografía">
+    <div class="image-modal-backdrop"></div>
+    <div class="image-modal-content">
+        <button type="button" class="image-modal-close" id="modalClose" aria-label="Cerrar visor">&times;</button>
+        <img id="modalImg" src="" alt="">
+        <p id="modalCaption" class="image-modal-caption"></p>
+    </div>
+</div>
+
+<!-- Toast flotante de avisos -->
+<div id="toast" class="toast hidden"></div>
+
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+=== REGISTRO DE VIAJEROS - FINCA REGALEIRA ===
+Total de viajeros registrados: 4
+==============================================
+
+VIAJERO #1
+- Nombre: Elver Galarga
+- DNI/NIE: 12345678A
+- Teléfono: 666666666
+- Alergias: alergico a los moros
+- Lesiones: la tengo muy larga
+- Discapacidad: 65_o_mas
+- Compañeros de habitación: quiero estar con mujeres estoy muy salido
+- Foto adjunta: No
+- Fecha: 2026-10-29T15:51:14.391Z
+----------------------------------------------
+
+VIAJERO #2
+- Nombre: Elver Galarga
+- DNI/NIE: 12345678A
+- Teléfono: 666666666
+- Alergias: No
+- Lesiones: No
+- Discapacidad: ninguno
+- Compañeros de habitación: Mujeres
+- Foto adjunta: No
+- Fecha: 2026-10-29T15:55:25.605Z
+----------------------------------------------
+
+VIAJERO #3
+- Nombre: Elver Galarga
+- DNI/NIE: 12345678A
+- Teléfono: 666666666
+- Alergias: No
+- Lesiones: No
+- Discapacidad: ninguno
+- Compañeros de habitación: Sin preferencias
+- Foto adjunta: No
+- Fecha: 2026-10-29T15:59:24.829Z
+----------------------------------------------
+
+VIAJERO #4
+- Nombre: Elver Galarga
+- DNI/NIE: 12345678A
+- Teléfono: 666666666
+- Alergias: No
+- Lesiones: No
+- Discapacidad: ninguno
+- Compañeros de habitación: Sin preferencias
+- Foto adjunta: No
+- Fecha: 29/10/2026, 17:06:12
+----------------------------------------------

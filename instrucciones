@@ -1,0 +1,49 @@
+Trabajo digi
+
+Para crear el enlace hay que abrir compartir con el siguiente comando: node compartir.js
+
+Hacer QR que todos los viajeros que tengamos se registren en una página(formulario) que tenga que subir una foto personal  a parte de los datos dentro de los datos, poner alergias o no alergias, especificar cuáles, lesiones que puedan tener, físicas, añadir el grado de discapacidad, otro apartado de preferencias para habitación(compañeros)
+Fotos de habitación comedor
+
+Página qr: https://get-qr.com/es/generate/link?utm_source=google&utm_medium=cpc&utm_campaign=19137688033&utm_adgroupid=149913522189&utm_content=666610529654&audience=149913522189&keyword=url+a+qr&utm_target=&device=c&gad_source=1&gad_campaignid=19137688033
+
+==================================================
+ESQUEMA DEL FORMULARIO
+==================================================
+
+0. Acceso
+   - Código QR que abre la página del formulario.
+
+1. Foto personal (obligatoria)
+   - Subir imagen (cámara del móvil o galería).
+   - Vista previa antes de enviar.
+
+2. Datos personales (propuesta, confirmar)
+   - Nombre y apellidos
+   - Fecha de nacimiento / edad
+   - DNI / pasaporte
+   - Teléfono y email
+   - Contacto de emergencia (nombre y teléfono)
+
+3. Alergias
+   - ¿Tiene alergias? -> Sí / No
+   - Si "Sí": especificar cuáles (alimentarias, medicamentos, otras).
+
+4. Lesiones
+   - ¿Tiene alguna lesión física? -> Sí / No
+   - Si "Sí": descripción de la lesión.
+
+5. Discapacidad
+   - ¿Tiene discapacidad reconocida? -> Sí / No
+   - Si "Sí": grado de discapacidad (%) y observaciones (opcional).
+
+6. Preferencias de habitación
+   - Compañeros con los que quiere compartir habitación (uno o varios).
+   - Observaciones (opcional).
+
+7. Envío
+   - Aceptación del tratamiento de datos (RGPD: hay datos de salud y foto).
+   - Botón "Enviar" y mensaje de confirmación.
+
+Aparte del formulario:
+   - Galería con fotos de la habitación y del comedor (contenido informativo de la página).
