@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const datosGuardados = document.getElementById('datosGuardados');
     const btnNuevo = document.getElementById('btnNuevoRegistro');
     const btnSubmit = document.getElementById('btnSubmit');
+    const btnDescargarTxt = document.getElementById('btnDescargarTxt');
 
     // Modal Admin / Configuración GitHub
     const btnAbrirAdmin = document.getElementById('btnAbrirAdmin');
@@ -583,6 +584,60 @@ document.addEventListener('DOMContentLoaded', () => {
         form.classList.remove('hidden');
         inputNombre.focus();
     });
+
+    // =========================================================================
+    // DESCARGA MANUAL DE REGISTROS (ÚNICA Y EXCLUSIVAMENTE AL PULSAR EL BOTÓN)
+    // =========================================================================
+    function descargarTextoComoArchivo(contenido, nombreArchivo = 'registros.txt') {
+        const blob = new Blob([contenido], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = nombreArchivo;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    if (btnDescargarTxt) {
+        btnDescargarTxt.addEventListener('click', async () => {
+            const token = obtenerTokenGitHub();
+            const owner = (typeof GITHUB_CONFIG !== 'undefined' && GITHUB_CONFIG.owner) || 'J-Fco29';
+            const repo = (typeof GITHUB_CONFIG !== 'undefined' && GITHUB_CONFIG.repo) || 'Finca-Regaleira';
+            const branch = (typeof GITHUB_CONFIG !== 'undefined' && GITHUB_CONFIG.branch) || 'main';
+            const rutaRegistros = (typeof GITHUB_CONFIG !== 'undefined' && GITHUB_CONFIG.rutaRegistros) || 'app/registros.txt';
+
+            mostrarToast('📥 Descargando registros.txt desde GitHub...');
+
+            try {
+                const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${rutaRegistros}?ref=${branch}`, {
+                    headers: token ? { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' } : {},
+                    cache: 'no-store'
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    const contenido = base64ToUtf8(data.content);
+                    descargarTextoComoArchivo(contenido, 'registros.txt');
+                    mostrarToast('✓ Archivo registros.txt descargado');
+                    return;
+                }
+            } catch (_) {}
+
+            try {
+                const resRaw = await fetch(`https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${rutaRegistros}?t=${Date.now()}`);
+                if (resRaw.ok) {
+                    const contenido = await resRaw.text();
+                    descargarTextoComoArchivo(contenido, 'registros.txt');
+                    mostrarToast('✓ Archivo registros.txt descargado');
+                    return;
+                }
+            } catch (_) {}
+
+            mostrarToast('⚠️ No se pudo descargar el archivo de GitHub');
+        });
+    }
 
     // ==========================================
     // MODAL DE ADMINISTRACIÓN (GITHUB TOKEN)
