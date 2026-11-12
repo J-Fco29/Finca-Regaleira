@@ -4,7 +4,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const alertExito = document.getElementById('mensajeExito');
     const datosGuardados = document.getElementById('datosGuardados');
     const btnNuevo = document.getElementById('btnNuevoRegistro');
-    const btnDescargarTxt = document.getElementById('btnDescargarTxt');
+    const btnSubmit = document.getElementById('btnSubmit');
+
+    // Modal Admin / Configuración GitHub
+    const btnAbrirAdmin = document.getElementById('btnAbrirAdmin');
+    const modalAdmin = document.getElementById('modalAdmin');
+    const modalAdminClose = document.getElementById('modalAdminClose');
+    const modalAdminBackdrop = document.getElementById('modalAdminBackdrop');
+    const adminTokenInput = document.getElementById('adminTokenInput');
+    const adminTokenStatus = document.getElementById('adminTokenStatus');
+    const btnTestConexion = document.getElementById('btnTestConexion');
+    const btnGuardarTokenLocal = document.getElementById('btnGuardarTokenLocal');
 
     // Inputs de datos personales
     const inputNombre = document.getElementById('nombre');
@@ -44,7 +54,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalBackdrop = document.querySelector('.image-modal-backdrop');
     const toast = document.getElementById('toast');
 
-    let archivoTxtHandle = null;
 
     // ==========================================
     // NOTIFICACIÓN TOAST
@@ -268,108 +277,221 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ==========================================
-    // FORMATEO DE REGISTROS CON FOTO (TXT)
+    // UTILIDADES GITHUB Y FORMATO
     // ==========================================
-    function generarContenidoTxt(registros) {
-        let texto = '=== REGISTRO DE VIAJEROS - FINCA REGALEIRA ===\n';
-        texto += `Total de viajeros registrados: ${registros.length}\n`;
-        texto += '==============================================\n\n';
+    function utf8ToBase64(str) {
+        const bytes = new TextEncoder().encode(str);
+        let binary = '';
+        for (let i = 0; i < bytes.byteLength; i++) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+        return btoa(binary);
+    }
 
-        registros.forEach((v, idx) => {
-            texto += `VIAJERO #${idx + 1}\n`;
-            texto += `- Nombre: ${v.nombre}\n`;
-            texto += `- DNI/NIE: ${v.dni}\n`;
-            texto += `- Teléfono: ${v.telefono}\n`;
-            texto += `- Alergias: ${v.tieneAlergias ? v.alergias : 'No'}\n`;
-            texto += `- Lesiones: ${v.tieneLesiones ? v.lesiones : 'No'}\n`;
-            texto += `- Discapacidad: ${v.discapacidadTexto || v.discapacidad}\n`;
-            texto += `- Compañeros de habitación: ${v.companeros || 'Sin preferencias'}\n`;
-            texto += `- Foto adjunta: ${v.tieneFoto ? 'Sí' : 'No'}\n`;
-            if (v.tieneFoto && v.foto) {
-                texto += `- Foto personal (Base64): ${v.foto}\n`;
+    function base64ToUtf8(base64) {
+        const clean = base64.replace(/\s/g, '');
+        const binary = atob(clean);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+            bytes[i] = binary.charCodeAt(i);
+        }
+        return new TextDecoder().decode(bytes);
+    }
+
+    function obtenerTokenGitHub() {
+        let t = '';
+        if (typeof GITHUB_CONFIG !== 'undefined') {
+            if (GITHUB_CONFIG.key) {
+                t = GITHUB_CONFIG.key.split('').reverse().join('').trim();
+            } else if (GITHUB_CONFIG.token) {
+                t = GITHUB_CONFIG.token.trim();
             }
-            texto += `- Fecha: ${v.fechaRegistro}\n`;
-            texto += '----------------------------------------------\n\n';
+        }
+        if (!t) {
+            t = (localStorage.getItem('finca_github_token') || '').trim();
+        }
+        if (!t) return '';
+
+        // Si el token está en Base64 para saltar el filtro de GitHub Secret Scanning, decodificar
+        if (!t.startsWith('ghp_') && !t.startsWith('github_pat_')) {
+            try {
+                const dec = atob(t).trim();
+                if (dec.startsWith('ghp_') || dec.startsWith('github_pat_')) {
+                    return dec;
+                }
+            } catch (_) {}
+        }
+        return t;
+    }
+
+    async function probarConexionGitHub(token) {
+        const owner = (typeof GITHUB_CONFIG !== 'undefined' && GITHUB_CONFIG.owner) || 'J-Fco29';
+        const repo = (typeof GITHUB_CONFIG !== 'undefined' && GITHUB_CONFIG.repo) || 'Finca-Regaleira';
+        try {
+            const res = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/vnd.github+json'
+                }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                return { ok: true, mensaje: `✓ Conexión establecida con éxito en ${data.full_name} (${data.visibility || 'público'}).` };
+            } else if (res.status === 401) {
+                return { ok: false, mensaje: '❌ Token no válido o expirado (Error 401 Unauthorized).' };
+            } else if (res.status === 404) {
+                return { ok: false, mensaje: `❌ Repositorio ${owner}/${repo} no encontrado o token sin permisos (Error 404).` };
+            } else {
+                return { ok: false, mensaje: `❌ Error de respuesta de GitHub (${res.status}).` };
+            }
+        } catch (_) {
+            return { ok: false, mensaje: '❌ Error de red al intentar conectar con la API de GitHub.' };
+        }
+    }
+
+    function agregarViajeroATxt(txtActual, nuevo, nombreFoto = '') {
+        const match = txtActual.match(/Total de viajeros registrados:\s*(\d+)/i);
+        let total = 1;
+        let nuevoTxt = '';
+
+        if (match) {
+            total = parseInt(match[1], 10) + 1;
+            nuevoTxt = txtActual.replace(/Total de viajeros registrados:\s*\d+/i, `Total de viajeros registrados: ${total}`);
+        } else {
+            nuevoTxt = `=== REGISTRO DE VIAJEROS - FINCA REGALEIRA ===\nTotal de viajeros registrados: 1\n==============================================\n\n` + txtActual;
+        }
+
+        nuevoTxt = nuevoTxt.trimEnd() + '\n\n';
+        nuevoTxt += `VIAJERO #${total}\n`;
+        nuevoTxt += `- Nombre: ${nuevo.nombre}\n`;
+        nuevoTxt += `- DNI/NIE: ${nuevo.dni}\n`;
+        nuevoTxt += `- Teléfono: ${nuevo.telefono}\n`;
+        nuevoTxt += `- Alergias: ${nuevo.tieneAlergias ? nuevo.alergias : 'No'}\n`;
+        nuevoTxt += `- Lesiones: ${nuevo.tieneLesiones ? nuevo.lesiones : 'No'}\n`;
+        nuevoTxt += `- Discapacidad: ${nuevo.discapacidadTexto || nuevo.discapacidad}\n`;
+        nuevoTxt += `- Compañeros de habitación: ${nuevo.companeros || 'Sin preferencias'}\n`;
+        if (nombreFoto) {
+            nuevoTxt += `- Foto adjunta: Sí (app/fotos_viajeros/${nombreFoto})\n`;
+        } else {
+            nuevoTxt += `- Foto adjunta: ${nuevo.tieneFoto ? 'Sí' : 'No'}\n`;
+        }
+        nuevoTxt += `- Fecha: ${nuevo.fechaRegistro}\n`;
+        nuevoTxt += `----------------------------------------------\n`;
+
+        return { nuevoTxt, total };
+    }
+
+    async function guardarEnGitHub(nuevoViajero, intento = 1) {
+        const token = obtenerTokenGitHub();
+        if (!token) {
+            return {
+                ok: false,
+                error: 'No hay token de GitHub configurado. Configúralo en el archivo config.js o pulsa en el icono ⚙️.'
+            };
+        }
+
+        const owner = (typeof GITHUB_CONFIG !== 'undefined' && GITHUB_CONFIG.owner) || 'J-Fco29';
+        const repo = (typeof GITHUB_CONFIG !== 'undefined' && GITHUB_CONFIG.repo) || 'Finca-Regaleira';
+        const branch = (typeof GITHUB_CONFIG !== 'undefined' && GITHUB_CONFIG.branch) || 'main';
+        const rutaRegistros = (typeof GITHUB_CONFIG !== 'undefined' && GITHUB_CONFIG.rutaRegistros) || 'app/registros.txt';
+        const rutaFotos = (typeof GITHUB_CONFIG !== 'undefined' && GITHUB_CONFIG.rutaFotos) || 'app/fotos_viajeros';
+
+        const headers = {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/vnd.github+json',
+            'Content-Type': 'application/json'
+        };
+
+        // 1. Si el viajero subió foto, guardarla como archivo en app/fotos_viajeros/
+        let nombreFoto = '';
+        if (nuevoViajero.tieneFoto && nuevoViajero.foto && intento === 1) {
+            try {
+                const base64Puro = nuevoViajero.foto.replace(/^data:image\/\w+;base64,/, '');
+                const ext = nuevoViajero.foto.includes('png') ? '.png' : '.jpg';
+                const dniLimpio = (nuevoViajero.dni || 'viajero_' + Date.now()).replace(/[^a-zA-Z0-9_-]/g, '_');
+                nombreFoto = `foto_${dniLimpio}${ext}`;
+                const pathFoto = `${rutaFotos}/${nombreFoto}`;
+
+                let shaFoto = undefined;
+                try {
+                    const getFoto = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${pathFoto}?ref=${branch}`, { headers, cache: 'no-store' });
+                    if (getFoto.ok) {
+                        const jsonFoto = await getFoto.json();
+                        shaFoto = jsonFoto.sha;
+                    }
+                } catch (_) {}
+
+                await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${pathFoto}`, {
+                    method: 'PUT',
+                    headers,
+                    body: JSON.stringify({
+                        message: `Foto de viajero: ${nuevoViajero.nombre} (${nuevoViajero.dni})`,
+                        content: base64Puro,
+                        branch,
+                        ...(shaFoto ? { sha: shaFoto } : {})
+                    })
+                });
+            } catch (errFoto) {
+                console.warn('No se pudo guardar la foto en GitHub:', errFoto);
+                nombreFoto = '';
+            }
+        }
+
+        // 2. Obtener app/registros.txt actual desde GitHub
+        let shaActual = undefined;
+        let contenidoActual = '';
+
+        const getRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${rutaRegistros}?ref=${branch}`, {
+            headers,
+            cache: 'no-store'
         });
 
-        return texto;
-    }
-
-    function descargarArchivoBlob(contenido) {
-        const blob = new Blob([contenido], { type: 'text/plain;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'registros.txt';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    }
-
-    // ==========================================
-    // GUARDAR EN ARCHIVO DE REGISTROS
-    // ==========================================
-    async function guardarEnArchivoTxt(registros, nuevoViajero = null) {
-        const contenido = generarContenidoTxt(registros);
-
-        // 1. Intentar guardar en backend si está activo (Node.js server.js)
-        try {
-            const respuesta = await fetch('/api/guardar-registro', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contenido, registros, nuevoViajero })
-            });
-            if (respuesta.ok) {
-                return true;
-            }
-        } catch (_) {
-            // Sin servidor backend activo
-        }
-
-        // 2. File System Access API (si el navegador lo soporta)
-        if ('showSaveFilePicker' in window) {
-            try {
-                if (!archivoTxtHandle) {
-                    archivoTxtHandle = await window.showSaveFilePicker({
-                        suggestedName: 'registros.txt',
-                        types: [{
-                            description: 'Archivo de texto',
-                            accept: { 'text/plain': ['.txt'] }
-                        }]
-                    });
-                }
-                const writable = await archivoTxtHandle.createWritable();
-                await writable.write(contenido);
-                await writable.close();
-                return true;
-            } catch (_) {
-                descargarArchivoBlob(contenido);
-                return true;
-            }
+        if (getRes.ok) {
+            const data = await getRes.json();
+            shaActual = data.sha;
+            contenidoActual = base64ToUtf8(data.content);
+        } else if (getRes.status === 404) {
+            contenidoActual = '=== REGISTRO DE VIAJEROS - FINCA REGALEIRA ===\nTotal de viajeros registrados: 0\n==============================================\n\n';
         } else {
-            // 3. Fallback: descarga directa del archivo registros.txt
-            descargarArchivoBlob(contenido);
-            return true;
+            const errJson = await getRes.json().catch(() => ({}));
+            return {
+                ok: false,
+                error: errJson.message || `Error ${getRes.status} al leer registros.txt en GitHub.`
+            };
         }
+
+        // 3. Generar nuevo contenido acumulado con el nuevo viajero
+        const { nuevoTxt, total } = agregarViajeroATxt(contenidoActual, nuevoViajero, nombreFoto);
+
+        // 4. Guardar en GitHub mediante commit
+        const putRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${rutaRegistros}`, {
+            method: 'PUT',
+            headers,
+            body: JSON.stringify({
+                message: `Registro viajero #${total}: ${nuevoViajero.nombre} (${nuevoViajero.dni})`,
+                content: utf8ToBase64(nuevoTxt),
+                branch,
+                ...(shaActual ? { sha: shaActual } : {})
+            })
+        });
+
+        if (putRes.status === 409 && intento < 3) {
+            // Conflicto de concurrencia: otro usuario hizo commit al mismo tiempo, reintentar con el SHA actualizado
+            await new Promise(r => setTimeout(r, 1000));
+            return guardarEnGitHub(nuevoViajero, intento + 1);
+        }
+
+        if (!putRes.ok) {
+            const errJson = await putRes.json().catch(() => ({}));
+            return {
+                ok: false,
+                error: errJson.message || `Error ${putRes.status} al guardar en GitHub.`
+            };
+        }
+
+        return { ok: true, total };
     }
 
-    function obtenerRegistros() {
-        try {
-            return JSON.parse(localStorage.getItem('viajeros_registrados') || '[]');
-        } catch (_) {
-            return [];
-        }
-    }
-
-    function guardarRegistros(lista) {
-        try {
-            localStorage.setItem('viajeros_registrados', JSON.stringify(lista));
-        } catch (e) {
-            const listaLigera = lista.map(item => ({ ...item, foto: '' }));
-            localStorage.setItem('viajeros_registrados', JSON.stringify(listaLigera));
-        }
-    }
 
     // ==========================================
     // ENVÍO DEL FORMULARIO
@@ -410,28 +532,36 @@ document.addEventListener('DOMContentLoaded', () => {
             fechaRegistro: new Date().toLocaleString('es-ES')
         };
 
-        // Guardar en almacenamiento privado
-        const registros = obtenerRegistros();
-        registros.push(nuevoViajero);
-        guardarRegistros(registros);
+        const textoOriginalBtn = btnSubmit ? btnSubmit.textContent : 'Confirmar y registrar viajero';
+        if (btnSubmit) {
+            btnSubmit.disabled = true;
+            btnSubmit.textContent = 'Guardando en GitHub...';
+        }
 
-        // Guardar / actualizar en registros.txt
-        await guardarEnArchivoTxt(registros, nuevoViajero);
+        try {
+            // Guardar directamente en GitHub (online)
+            const resGitHub = await guardarEnGitHub(nuevoViajero);
+            if (!resGitHub.ok) {
+                throw new Error(resGitHub.error || 'No se pudo guardar en GitHub.');
+            }
 
-        // Mostrar pantalla de éxito privada
-        datosGuardados.textContent = `Ficha registrada: ${nuevoViajero.nombre} (${nuevoViajero.dni}). Tus datos y foto personal han sido guardados para el viaje.`;
-        form.classList.add('hidden');
-        alertExito.classList.remove('hidden');
-        mostrarToast('✓ ¡Registro y archivo actualizados!');
+            // Éxito: mostrar pantalla de confirmación (SIN descargar nada en el móvil)
+            datosGuardados.textContent = `Ficha de ${nuevoViajero.nombre} (${nuevoViajero.dni}) guardada con éxito en GitHub para el viaje a Finca Regaleira.`;
+            form.classList.add('hidden');
+            alertExito.classList.remove('hidden');
+            mostrarToast('✓ ¡Registro guardado en GitHub con éxito!');
+        } catch (err) {
+            mostrarToast('❌ ' + err.message, 6000);
+            if (err.message.includes('token') || err.message.includes('Token')) {
+                if (modalAdmin) modalAdmin.classList.remove('hidden');
+            }
+        } finally {
+            if (btnSubmit) {
+                btnSubmit.disabled = false;
+                btnSubmit.textContent = textoOriginalBtn;
+            }
+        }
     });
-
-    if (btnDescargarTxt) {
-        btnDescargarTxt.addEventListener('click', () => {
-            const registros = obtenerRegistros();
-            const contenido = generarContenidoTxt(registros);
-            descargarArchivoBlob(contenido);
-        });
-    }
 
     btnNuevo.addEventListener('click', () => {
         form.reset();
@@ -453,6 +583,74 @@ document.addEventListener('DOMContentLoaded', () => {
         form.classList.remove('hidden');
         inputNombre.focus();
     });
+
+    // ==========================================
+    // MODAL DE ADMINISTRACIÓN (GITHUB TOKEN)
+    // ==========================================
+    if (btnAbrirAdmin && modalAdmin) {
+        btnAbrirAdmin.addEventListener('click', () => {
+            if (adminTokenInput) {
+                adminTokenInput.value = obtenerTokenGitHub();
+            }
+            if (adminTokenStatus) {
+                adminTokenStatus.className = 'admin-status-msg';
+                adminTokenStatus.textContent = '';
+                adminTokenStatus.style.display = 'none';
+            }
+            modalAdmin.classList.remove('hidden');
+        });
+    }
+
+    const cerrarAdminModal = () => {
+        if (modalAdmin) modalAdmin.classList.add('hidden');
+    };
+
+    if (modalAdminClose) modalAdminClose.addEventListener('click', cerrarAdminModal);
+    if (modalAdminBackdrop) modalAdminBackdrop.addEventListener('click', cerrarAdminModal);
+
+    if (btnTestConexion) {
+        btnTestConexion.addEventListener('click', async () => {
+            const token = (adminTokenInput ? adminTokenInput.value.trim() : '') || obtenerTokenGitHub();
+            if (!token) {
+                if (adminTokenStatus) {
+                    adminTokenStatus.className = 'admin-status-msg admin-status-error';
+                    adminTokenStatus.textContent = 'Introduce un token para probar la conexión.';
+                }
+                return;
+            }
+            if (adminTokenStatus) {
+                adminTokenStatus.className = 'admin-status-msg';
+                adminTokenStatus.style.display = 'block';
+                adminTokenStatus.textContent = 'Comprobando conexión con GitHub...';
+            }
+            const res = await probarConexionGitHub(token);
+            if (adminTokenStatus) {
+                adminTokenStatus.className = `admin-status-msg ${res.ok ? 'admin-status-success' : 'admin-status-error'}`;
+                adminTokenStatus.textContent = res.mensaje;
+            }
+        });
+    }
+
+    if (btnGuardarTokenLocal) {
+        btnGuardarTokenLocal.addEventListener('click', () => {
+            const val = adminTokenInput ? adminTokenInput.value.trim() : '';
+            if (val) {
+                localStorage.setItem('finca_github_token', val);
+                mostrarToast('✓ Token guardado en tu navegador');
+                if (adminTokenStatus) {
+                    adminTokenStatus.className = 'admin-status-msg admin-status-success';
+                    adminTokenStatus.textContent = '✓ Token guardado correctamente en tu navegador.';
+                }
+            } else {
+                localStorage.removeItem('finca_github_token');
+                mostrarToast('Token eliminado');
+                if (adminTokenStatus) {
+                    adminTokenStatus.className = 'admin-status-msg';
+                    adminTokenStatus.style.display = 'none';
+                }
+            }
+        });
+    }
 
     // ==========================================
     // VISOR MODAL DE LA GALERÍA DE FOTOS

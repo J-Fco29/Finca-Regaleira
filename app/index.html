@@ -14,7 +14,10 @@
 <div class="bg-glow"></div>
 
 <header class="header">
-    <span class="badge">🏰 Finca Regaleira</span>
+    <div class="header-top-bar">
+        <span class="badge">🏰 Finca Regaleira</span>
+        <button type="button" id="btnAbrirAdmin" class="btn-admin-gear" title="Configurar conexión con GitHub (Organizador)" aria-label="Configurar GitHub">⚙️</button>
+    </div>
     <h1>Registro de Viajeros</h1>
     <p>Completa tus datos para organizar las habitaciones y dietas del viaje a Sintra.</p>
 </header>
@@ -215,14 +218,13 @@
         <button type="submit" id="btnSubmit" class="btn-submit">Confirmar y registrar viajero</button>
     </form>
 
-    <!-- Mensaje de confirmación privado -->
+    <!-- Mensaje de confirmación -->
     <div id="mensajeExito" class="card alert-success hidden">
         <div class="success-icon">✓</div>
         <h3>¡Registro completado con éxito!</h3>
-        <p id="datosGuardados" class="success-subtitle">Tu ficha de viajero se ha registrado correctamente para el viaje.</p>
+        <p id="datosGuardados" class="success-subtitle">Tu ficha de viajero se ha registrado correctamente en GitHub para el viaje.</p>
 
         <div class="actions-group">
-            <button id="btnDescargarTxt" type="button" class="btn-secondary btn-sm-inline">📥 Descargar registros.txt</button>
             <button id="btnNuevoRegistro" type="button" class="btn-submit btn-sm-inline">Registrar otro viajero</button>
         </div>
     </div>
@@ -238,9 +240,40 @@
     </div>
 </div>
 
+<!-- Modal de Configuración GitHub (para el organizador) -->
+<div id="modalAdmin" class="image-modal hidden" role="dialog" aria-modal="true" aria-label="Configuración de GitHub">
+    <div class="image-modal-backdrop" id="modalAdminBackdrop"></div>
+    <div class="admin-modal-card">
+        <div class="admin-modal-header">
+            <h3>⚙️ Conexión con GitHub</h3>
+            <button type="button" class="admin-close-btn" id="modalAdminClose" aria-label="Cerrar">&times;</button>
+        </div>
+        <p class="section-desc" style="margin-bottom: 14px; font-size: 0.88rem;">
+            Los registros se envían directamente a tu repositorio de GitHub (<code>app/registros.txt</code> y <code>app/fotos_viajeros/</code>) en lugar de descargarse en el móvil del visitante.
+        </p>
+
+        <div class="form-group" style="margin-bottom: 12px;">
+            <label for="adminTokenInput">GitHub Personal Access Token (PAT):</label>
+            <input type="password" id="adminTokenInput" placeholder="github_pat_... o token en Base64" autocomplete="off">
+            <small class="field-feedback" style="display:block; margin-top: 6px; color: var(--text-muted); font-size: 0.8rem;">
+                Permisos necesarios: <strong>Contents (Read and write)</strong> en el repositorio <code>J-Fco29/Finca-Regaleira</code>.
+            </small>
+        </div>
+
+        <div id="adminTokenStatus" class="admin-status-msg"></div>
+
+        <div class="actions-group" style="margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" id="btnTestConexion" class="btn-secondary btn-sm-inline">🔍 Probar conexión</button>
+            <button type="button" id="btnGuardarTokenLocal" class="btn-submit btn-sm-inline">Guardar token</button>
+            <a href="https://github.com/J-Fco29/Finca-Regaleira/blob/main/app/registros.txt" target="_blank" rel="noopener" class="btn-secondary btn-sm-inline" style="text-decoration: none; display: inline-flex; align-items: center;">📂 Ver registros en GitHub</a>
+        </div>
+    </div>
+</div>
+
 <!-- Toast flotante de avisos -->
 <div id="toast" class="toast hidden"></div>
 
+<script src="config.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
